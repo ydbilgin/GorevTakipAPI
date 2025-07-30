@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Görev Takip</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+    <h1>Görev Takip</h1>
+
+    <div class="task-input">
+        <input id="title" placeholder="Görev başlığı" />
+        <input id="desc" placeholder="Görev açıklaması (isteğe bağlı)" />
+        <button id="btnAdd">Ekle</button>
+    </div>
+
+    <!-- Tablo yapısı -->
+    <table class="task-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Başlık</th>
+                <th>Açıklama</th>
+                <th>Durum</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody id="taskBody">
+            <!-- JS ile doldurulacak -->
+        </tbody>
+    </table>
+
+    <script>
+        const apiUrl = '/api/tasks';
+        document.addEventListener('DOMContentLoaded', fetchTasks);
+        document.getElementById('btnAdd').addEventListener('click', addTask);
+
+        async function fetchTasks() {
+            const res = await fetch(apiUrl);
+            const tasks = await res.json();
+            const tbody = document.getElementById('taskBody');
+            tbody.innerHTML = '';
+
+            tasks.forEach((t, idx) => {
+                const tr = document.createElement('tr');
+                if (t.isCompleted) tr.classList.add('done');
+
+                // Sıra numarası
+                const tdIdx = document.createElement('td');
+                tdIdx.textContent = (idx + 1).toString();
+                tr.appendChild(tdIdx);
+
+                // Başlık
+                const tdTitle = document.createElement('td');
+                tdTitle.textContent = t.title;
+                tr.appendChild(tdTitle);
+
+                // Açıklama
+                const tdDesc = document.createElement('td');
+                tdDesc.textContent = t.description || '';
+                tr.appendChild(tdDesc);
+
+                // Durum (badge)
+                const tdStatus = document.createElement('td');
+                if (t.isCompleted) {
+                    const badge = document.createElement('span');
+                    badge.textContent = 'Tamamlandı';
+                    badge.className = 'status';
+                    tdStatus.appendChild(badge);
+                } else {
+                    tdStatus.textContent = 'Beklemede';
+                }
+                tr.appendChild(tdStatus);
+
+                // İşlemler
+                const tdActions = document.createElement('td');
+                tdActions.className = 'actions';
+                if (!t.isCompleted) {
+                    const btnDone = document.createElement('button');
+                    btnDone.innerHTML = '✓';
+                    btnDone.className = 'done-btn';
+                    btnDone.onclick = () => completeTask(t.id);
+                    tdActions.appendChild(btnDone);
+                }
+                const btnDel = document.createElement('button');
+                btnDel.innerHTML = '🗑️';
+                btnDel.className = 'delete-btn';
+                btnDel.onclick = () => deleteTask(t.id);
+                tdActions.appendChild(btnDel);
+
+                tr.appendChild(tdActions);
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function addTask() {
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('desc').value.trim();
+            if (!title) {
+                alert('Lütfen bir başlık girin.');
+                return;
+            }
+            await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+            document.getElementById('title').value = '';
+            document.getElementById('desc').value = '';
+            fetchTasks();
+        }
+
+        async function completeTask(id) {
+            await fetch(`${apiUrl}/${id}/complete`, { method: 'PUT' });
+            fetchTasks();
+        }
+
+        async function deleteTask(id) {
+            if (!confirm('Silmek istediğine emin misin?')) return;
+            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            fetchTasks();
+        }
+    </script>
+</body>
+
+</html>
