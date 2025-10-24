@@ -7,6 +7,7 @@ namespace GorevTakipAPI.Application.Services
     {
         IEnumerable<TaskDto> GetAll();
         TaskDto Add(TaskDto dto);
+        TaskDto Update(int id, TaskDto dto);
         void Complete(int id);
         void Remove(int id);
     }
