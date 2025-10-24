@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GorevTakipAPI.Application.DTOs;
 using GorevTakipAPI.Domain.Models;
-using GorevTakipAPI.Infrastructure.Persistence;
+using GorevTakipAPI.Infrastructure.Persistence.Repositories;
 
 namespace GorevTakipAPI.Application.Services
 {
@@ -30,6 +30,19 @@ namespace GorevTakipAPI.Application.Services
             };
             _repo.Add(entity);
             dto.Id = entity.Id;
+            return dto;
+        }
+
+        public TaskDto Update(int id, TaskDto dto)
+        {
+            var entity = new TodoTask
+            {
+                Id = id,
+                Title = dto.Title,
+                Description = dto.Description
+            };
+            _repo.Update(entity);
+            dto.Id = id;
             return dto;
         }
 

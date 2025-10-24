@@ -21,6 +21,13 @@ namespace GorevTakipAPI.Web.Controllers
             return CreatedAtAction(nameof(GetAll), new { id = result.Id }, result);
         }
 
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, TaskDto dto)
+        {
+            var result = _svc.Update(id, dto);
+            return Ok(result);
+        }
+
         [HttpPut("{id}/complete")]
         public IActionResult Complete(int id)
         {

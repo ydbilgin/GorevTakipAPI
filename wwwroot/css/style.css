@@ -1,120 +1,93 @@
 :root {
     --bg-page: #f4f6fc;
-    --bg-card: #ffffff;
     --text-main: #333333;
     --text-alt: #555555;
     --accent: #4a90e2;
     --success: #28a745;
     --danger: #dc3545;
-    --border: #e0e0e0;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
 
 body {
     background-color: var(--bg-page);
     color: var(--text-main);
     font-family: "Segoe UI", Tahoma, sans-serif;
-    padding: 2rem;
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: var(--accent);
-}
-
-/* Giriş alanları */
-.task-input {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.task-input input {
-    flex: 1;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-}
-
-.task-input button {
-    padding: 0.5rem 1rem;
-    background-color: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.task-input button:hover {
-    background-color: #357ab8;
-}
-
-/* Tablo stili */
-.task-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--bg-card);
-}
-
-.task-table th,
-.task-table td {
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border);
-    text-align: left;
-    vertical-align: middle;
-}
-
-.task-table thead {
-    background-color: var(--accent);
-    color: #fff;
-}
-
-.task-table tbody tr:nth-child(even) {
-    background-color: #f9fbff;
-}
-
-/* Başlık üstü çizgili tamamlanan satırlarda */
 .task-table tbody tr.done td {
     color: var(--text-alt);
     text-decoration: line-through;
 }
 
-/* Küçük badge’ler */
 .status {
-    display: inline-block;
-    padding: 0.2rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
     font-size: 0.75rem;
-    font-weight: bold;
+    font-weight: 600;
+    border-radius: 999px;
     color: #fff;
+}
+
+.status--success {
     background-color: var(--success);
-    border-radius: 4px;
 }
 
-/* Butonlar */
-.actions button {
-    background: none;
+.status--pending {
+    background-color: #f0ad4e;
+    color: #2f2f2f;
+}
+
+.status-cell {
+    text-align: center;
+}
+
+.status-cell--success {
+    background-color: rgba(40, 167, 69, 0.12);
+}
+
+.status-cell--pending {
+    background-color: rgba(240, 173, 78, 0.28);
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+}
+
+.actions .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(110px, 1fr));
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    padding: 0.25rem 0.4rem;
     border: none;
+    background: none;
+}
+
+.action-button .icon {
     font-size: 1.1rem;
-    cursor: pointer;
-    margin-right: 0.5rem;
-    transition: transform 0.1s;
+    line-height: 1;
 }
 
-.actions button:hover {
-    transform: scale(1.2);
+.edit-btn {
+    color: var(--accent);
 }
 
-.actions .done-btn {
+.done-btn {
     color: var(--success);
 }
 
-.actions .delete-btn {
+.delete-btn {
     color: var(--danger);
+}
+
+.action-button--ghost {
+    visibility: hidden;
 }

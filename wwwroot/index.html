@@ -1,114 +1,235 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
     <meta charset="UTF-8" />
     <title>Görev Takip</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css" />
 </head>
-
 <body>
-    <h1>Görev Takip</h1>
+    <div class="container py-4">
+        <h1 class="text-center text-primary mb-4">Görev Takip</h1>
 
-    <div class="task-input">
-        <input id="title" placeholder="Görev başlığı" />
-        <input id="desc" placeholder="Görev açıklaması (isteğe bağlı)" />
-        <button id="btnAdd">Ekle</button>
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <input id="title" class="form-control" placeholder="Görev başlığı" />
+                    </div>
+                    <div class="col-md-5">
+                        <input id="desc" class="form-control" placeholder="Görev açıklaması (opsiyonel)" />
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button id="btnAdd" type="button" class="btn btn-primary">Ekle</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle task-table">
+                <thead class="table-primary">
+                    <tr>
+                        <th style="width:5%;">#</th>
+                        <th style="width:25%;">Başlık</th>
+                        <th style="width:35%;">Açıklama</th>
+                        <th style="width:15%;">Durum</th>
+                        <th style="width:20%;">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="taskBody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- Tablo yapısı -->
-    <table class="task-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Başlık</th>
-                <th>Açıklama</th>
-                <th>Durum</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody id="taskBody">
-            <!-- JS ile doldurulacak -->
-        </tbody>
-    </table>
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="editForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Görevi Düzenle</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="editTaskId" />
+                        <div class="mb-3">
+                            <label for="editTitle" class="form-label">Başlık</label>
+                            <input id="editTitle" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDesc" class="form-label">Açıklama</label>
+                            <textarea id="editDesc" class="form-control" rows="4"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
         const apiUrl = '/api/tasks';
-        document.addEventListener('DOMContentLoaded', fetchTasks);
-        document.getElementById('btnAdd').addEventListener('click', addTask);
+        const taskBody = document.getElementById('taskBody');
+        const editModalElement = document.getElementById('editModal');
+        const editModal = new bootstrap.Modal(editModalElement);
+        const editForm = document.getElementById('editForm');
+        const editTaskIdInput = document.getElementById('editTaskId');
+        const editTitleInput = document.getElementById('editTitle');
+        const editDescInput = document.getElementById('editDesc');
+        let editingRow = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTasks();
+            document.getElementById('btnAdd').addEventListener('click', addTask);
+            editForm.addEventListener('submit', submitEditForm);
+        });
 
         async function fetchTasks() {
-            const res = await fetch(apiUrl);
-            const tasks = await res.json();
-            const tbody = document.getElementById('taskBody');
-            tbody.innerHTML = '';
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                alert('Kayıtlar yüklenemedi.');
+                return;
+            }
 
-            tasks.forEach((t, idx) => {
-                const tr = document.createElement('tr');
-                if (t.isCompleted) tr.classList.add('done');
+            const tasks = await response.json();
+            taskBody.innerHTML = '';
+            tasks.forEach((task, index) => taskBody.appendChild(createTaskRow(task, index)));
+        }
 
-                // Sıra numarası
-                const tdIdx = document.createElement('td');
-                tdIdx.textContent = (idx + 1).toString();
-                tr.appendChild(tdIdx);
+        function createTaskRow(task, index) {
+            const tr = document.createElement('tr');
+            tr.dataset.taskId = task.id;
 
-                // Başlık
-                const tdTitle = document.createElement('td');
-                tdTitle.textContent = t.title;
-                tr.appendChild(tdTitle);
+            if (task.isCompleted) {
+                tr.classList.add('done');
+            }
 
-                // Açıklama
-                const tdDesc = document.createElement('td');
-                tdDesc.textContent = t.description || '';
-                tr.appendChild(tdDesc);
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td class="task-title">${task.title}</td>
+                <td class="task-desc">${task.description ?? ''}</td>
+                <td class="status-cell ${task.isCompleted ? 'status-cell--success' : 'status-cell--pending'}">
+                    ${task.isCompleted
+                        ? '<span class="status status--success">Tamamlandı</span>'
+                        : '<span class="status status--pending">Beklemede</span>'}
+                </td>
+                <td class="actions"></td>
+            `;
 
-                // Durum (badge)
-                const tdStatus = document.createElement('td');
-                if (t.isCompleted) {
-                    const badge = document.createElement('span');
-                    badge.textContent = 'Tamamlandı';
-                    badge.className = 'status';
-                    tdStatus.appendChild(badge);
-                } else {
-                    tdStatus.textContent = 'Beklemede';
-                }
-                tr.appendChild(tdStatus);
+            const actionsCell = tr.querySelector('.actions');
+            const wrap = document.createElement('div');
+            wrap.className = 'actions-grid';
+            actionsCell.appendChild(wrap);
 
-                // İşlemler
-                const tdActions = document.createElement('td');
-                tdActions.className = 'actions';
-                if (!t.isCompleted) {
-                    const btnDone = document.createElement('button');
-                    btnDone.innerHTML = '✓';
-                    btnDone.className = 'done-btn';
-                    btnDone.onclick = () => completeTask(t.id);
-                    tdActions.appendChild(btnDone);
-                }
-                const btnDel = document.createElement('button');
-                btnDel.innerHTML = '🗑️';
-                btnDel.className = 'delete-btn';
-                btnDel.onclick = () => deleteTask(t.id);
-                tdActions.appendChild(btnDel);
+            const editLink = document.createElement('button');
+            editLink.type = 'button';
+            editLink.className = 'action-button edit-btn edit-task btn btn-link p-0 text-decoration-none';
+            editLink.dataset.id = task.id;
+            editLink.dataset.title = task.title ?? '';
+            editLink.dataset.description = task.description ?? '';
+            editLink.innerHTML = '<span class="icon">&#9998;</span><span class="label">Düzenle</span>';
+            editLink.addEventListener('click', handleEditClick);
+            wrap.appendChild(editLink);
 
-                tr.appendChild(tdActions);
-                tbody.appendChild(tr);
+            if (!task.isCompleted) {
+                const doneBtn = document.createElement('button');
+                doneBtn.type = 'button';
+                doneBtn.className = 'action-button done-btn btn btn-link p-0 text-decoration-none';
+                doneBtn.innerHTML = '<span class="icon">&#10003;</span><span class="label">Tamamla</span>';
+                doneBtn.addEventListener('click', () => completeTask(task.id));
+                wrap.appendChild(doneBtn);
+            } else {
+                const spacer = document.createElement('span');
+                spacer.className = 'action-button action-button--ghost';
+                spacer.setAttribute('aria-hidden', 'true');
+                wrap.appendChild(spacer);
+            }
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'action-button delete-btn btn btn-link p-0 text-decoration-none';
+            deleteBtn.innerHTML = '<span class="icon">&#128465;</span><span class="label">Sil</span>';
+            deleteBtn.addEventListener('click', () => deleteTask(task.id));
+            wrap.appendChild(deleteBtn);
+
+            return tr;
+        }
+
+        function handleEditClick(event) {
+            const trigger = event.currentTarget;
+            editingRow = trigger.closest('tr');
+
+            editTaskIdInput.value = trigger.dataset.id;
+            editTitleInput.value = trigger.dataset.title;
+            editDescInput.value = trigger.dataset.description;
+
+            editModal.show();
+        }
+
+        async function submitEditForm(event) {
+            event.preventDefault();
+
+            const id = editTaskIdInput.value;
+            const title = editTitleInput.value.trim();
+            const description = editDescInput.value.trim();
+
+            if (!title) {
+                alert('Başlık boş olamaz.');
+                return;
+            }
+
+            const response = await fetch(`${apiUrl}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
             });
+
+            if (!response.ok) {
+                alert('Güncelleme başarısız oldu.');
+                return;
+            }
+
+            if (editingRow) {
+                editingRow.querySelector('.task-title').textContent = title;
+                editingRow.querySelector('.task-desc').textContent = description;
+
+                const editButton = editingRow.querySelector('.edit-task');
+                editButton.dataset.title = title;
+                editButton.dataset.description = description;
+            }
+
+            editModal.hide();
         }
 
         async function addTask() {
-            const title = document.getElementById('title').value.trim();
-            const description = document.getElementById('desc').value.trim();
+            const titleInput = document.getElementById('title');
+            const descInput = document.getElementById('desc');
+            const title = titleInput.value.trim();
+            const description = descInput.value.trim();
+
             if (!title) {
                 alert('Lütfen bir başlık girin.');
                 return;
             }
-            await fetch(apiUrl, {
+
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, description })
             });
-            document.getElementById('title').value = '';
-            document.getElementById('desc').value = '';
+
+            if (!response.ok) {
+                alert('Görev eklenemedi.');
+                return;
+            }
+
+            titleInput.value = '';
+            descInput.value = '';
+
             fetchTasks();
         }
 
@@ -118,11 +239,10 @@
         }
 
         async function deleteTask(id) {
-            if (!confirm('Silmek istediğine emin misin?')) return;
+            if (!confirm('Silmek istediğinize emin misiniz?')) return;
             await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
             fetchTasks();
         }
     </script>
 </body>
-
 </html>
