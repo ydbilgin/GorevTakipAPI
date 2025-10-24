@@ -47,6 +47,7 @@ namespace GorevTakipAPI.Application.Services
         }
 
         public void Complete(int id) => _repo.MarkCompleted(id);
+        public void Reopen(int id) => _repo.MarkIncomplete(id);
         public void Remove(int id) => _repo.Delete(id);
     }
 }

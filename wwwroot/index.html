@@ -106,6 +106,8 @@
 
             if (task.isCompleted) {
                 tr.classList.add('done');
+            } else {
+                tr.classList.add('pending');
             }
 
             tr.innerHTML = `
@@ -125,28 +127,30 @@
             wrap.className = 'actions-grid';
             actionsCell.appendChild(wrap);
 
-            const editLink = document.createElement('button');
-            editLink.type = 'button';
-            editLink.className = 'action-button edit-btn edit-task btn btn-link p-0 text-decoration-none';
-            editLink.dataset.id = task.id;
-            editLink.dataset.title = task.title ?? '';
-            editLink.dataset.description = task.description ?? '';
-            editLink.innerHTML = '<span class="icon">&#9998;</span><span class="label">Düzenle</span>';
-            editLink.addEventListener('click', handleEditClick);
-            wrap.appendChild(editLink);
+            const editButton = document.createElement('button');
+            editButton.type = 'button';
+            editButton.className = 'action-button edit-btn edit-task btn btn-link p-0 text-decoration-none';
+            editButton.dataset.id = task.id;
+            editButton.dataset.title = task.title ?? '';
+            editButton.dataset.description = task.description ?? '';
+            editButton.innerHTML = '<span class="icon">&#9998;</span><span class="label">Düzenle</span>';
+            editButton.addEventListener('click', handleEditClick);
+            wrap.appendChild(editButton);
 
-            if (!task.isCompleted) {
-                const doneBtn = document.createElement('button');
-                doneBtn.type = 'button';
-                doneBtn.className = 'action-button done-btn btn btn-link p-0 text-decoration-none';
-                doneBtn.innerHTML = '<span class="icon">&#10003;</span><span class="label">Tamamla</span>';
-                doneBtn.addEventListener('click', () => completeTask(task.id));
-                wrap.appendChild(doneBtn);
+            if (task.isCompleted) {
+                const reopenBtn = document.createElement('button');
+                reopenBtn.type = 'button';
+                reopenBtn.className = 'action-button done-btn btn btn-link p-0 text-decoration-none';
+                reopenBtn.innerHTML = '<span class="icon">&#8634;</span><span class="label">Geri Al</span>';
+                reopenBtn.addEventListener('click', () => reopenTask(task.id));
+                wrap.appendChild(reopenBtn);
             } else {
-                const spacer = document.createElement('span');
-                spacer.className = 'action-button action-button--ghost';
-                spacer.setAttribute('aria-hidden', 'true');
-                wrap.appendChild(spacer);
+                const completeBtn = document.createElement('button');
+                completeBtn.type = 'button';
+                completeBtn.className = 'action-button done-btn btn btn-link p-0 text-decoration-none';
+                completeBtn.innerHTML = '<span class="icon">&#10003;</span><span class="label">Tamamla</span>';
+                completeBtn.addEventListener('click', () => completeTask(task.id));
+                wrap.appendChild(completeBtn);
             }
 
             const deleteBtn = document.createElement('button');
@@ -193,16 +197,8 @@
                 return;
             }
 
-            if (editingRow) {
-                editingRow.querySelector('.task-title').textContent = title;
-                editingRow.querySelector('.task-desc').textContent = description;
-
-                const editButton = editingRow.querySelector('.edit-task');
-                editButton.dataset.title = title;
-                editButton.dataset.description = description;
-            }
-
             editModal.hide();
+            fetchTasks();
         }
 
         async function addTask() {
@@ -234,13 +230,30 @@
         }
 
         async function completeTask(id) {
-            await fetch(`${apiUrl}/${id}/complete`, { method: 'PUT' });
+            const response = await fetch(`${apiUrl}/${id}/complete`, { method: 'PUT' });
+            if (!response.ok) {
+                alert('Görev tamamlanamadı.');
+                return;
+            }
+            fetchTasks();
+        }
+
+        async function reopenTask(id) {
+            const response = await fetch(`${apiUrl}/${id}/reopen`, { method: 'PUT' });
+            if (!response.ok) {
+                alert('Görev yeniden açılırken hata oluştu.');
+                return;
+            }
             fetchTasks();
         }
 
         async function deleteTask(id) {
             if (!confirm('Silmek istediğinize emin misiniz?')) return;
-            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            const response = await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            if (!response.ok) {
+                alert('Görev silinemedi.');
+                return;
+            }
             fetchTasks();
         }
     </script>

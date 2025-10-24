@@ -9,6 +9,7 @@ namespace GorevTakipAPI.Application.Services
         TaskDto Add(TaskDto dto);
         TaskDto Update(int id, TaskDto dto);
         void Complete(int id);
+        void Reopen(int id);
         void Remove(int id);
     }
 }
