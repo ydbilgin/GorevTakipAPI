@@ -78,6 +78,17 @@ namespace GorevTakipAPI.Infrastructure.Persistence.Repositories
             cmd.ExecuteNonQuery();
         }
 
+        public void MarkIncomplete(int id)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE Tasks SET iscompleted = false WHERE Id = @id;";
+            cmd.Parameters.AddWithValue("id", id);
+            cmd.ExecuteNonQuery();
+        }
+
         public void Delete(int id)
         {
             using var conn = new NpgsqlConnection(_connectionString);

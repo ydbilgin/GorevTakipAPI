@@ -35,6 +35,13 @@ namespace GorevTakipAPI.Web.Controllers
             return NoContent();
         }
 
+        [HttpPut("{id}/reopen")]
+        public IActionResult Reopen(int id)
+        {
+            _svc.Reopen(id);
+            return NoContent();
+        }
+
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

@@ -8,19 +8,29 @@ namespace GorevTakipAPI.Infrastructure.Persistence
     {
         public static void Initialize(IConfiguration config)
         {
+            var adminConnectionString = config.GetConnectionString("Admin");
+            var defaultConnectionString = config.GetConnectionString("Default");
 
-            using var adminConn = new NpgsqlConnection(config.GetConnectionString("Admin"));
-            adminConn.Open();
-            using var cmd = adminConn.CreateCommand();
-            cmd.CommandText = "SELECT 1 FROM pg_database WHERE datname = 'TaskTracking'";
-            var exists = cmd.ExecuteScalar() != null;
-            if (!exists)
+            if (string.IsNullOrWhiteSpace(defaultConnectionString))
             {
-                cmd.CommandText = "CREATE DATABASE \"TaskTracking\"";
-                cmd.ExecuteNonQuery();
+                return;
             }
-            adminConn.Close();
-            using var userConn = new NpgsqlConnection(config.GetConnectionString("Default"));
+
+            if (!string.IsNullOrWhiteSpace(adminConnectionString))
+            {
+                using var adminConn = new NpgsqlConnection(adminConnectionString);
+                adminConn.Open();
+                using var cmd = adminConn.CreateCommand();
+                cmd.CommandText = "SELECT 1 FROM pg_database WHERE datname = 'TaskTracking'";
+                var exists = cmd.ExecuteScalar() != null;
+                if (!exists)
+                {
+                    cmd.CommandText = "CREATE DATABASE \"TaskTracking\"";
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            using var userConn = new NpgsqlConnection(defaultConnectionString);
             userConn.Open();
             using var cmd2 = userConn.CreateCommand();
             cmd2.CommandText = @"
